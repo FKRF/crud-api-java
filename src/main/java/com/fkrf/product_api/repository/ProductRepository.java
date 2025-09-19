@@ -1,6 +1,6 @@
-package com.fkrf.product_api.Repositories;
+package com.fkrf.product_api.repository;
 
-import com.fkrf.product_api.Models.Product;
+import com.fkrf.product_api.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

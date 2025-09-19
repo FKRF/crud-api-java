@@ -1,24 +1,21 @@
-package com.fkrf.product_api.Models;
+package com.fkrf.product_api.dto;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
-@Entity
-@Table(name = "products")
-public class Product {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ProductDTO {
     private long id;
-    @NotBlank
-    @Column(nullable = false)
     private String name;
-    @Column(length = 500)
     private String description;
-    @Min(value = 0)
-    @Column(nullable = false)
     private int quantity;
+    public ProductDTO() {}
+    public ProductDTO(long id, String name, String description, int quantity) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.quantity = quantity;
+    }
     public long getId() {
         return id;
     }
