@@ -18,9 +18,10 @@ import java.util.UUID;
 @Service
 public class UserService {
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    public UserService(UserRepository userRepository) {
+    private final BCryptPasswordEncoder passwordEncoder;
+    public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     private UserDTO toDTO(User user) {
         return new UserDTO(
@@ -38,45 +39,45 @@ public class UserService {
             userDTOS.add(toDTO(user));
         return userDTOS;
     }
-    public Optional<UserDTO> getUserById(UUID id) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if(!userOpt.isPresent())
-            return Optional.empty();
-        return Optional.of(toDTO(userOpt.get()));
+    public UserDTO getUserById(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        return toDTO(user);
     }
     public UserDTO createUser(UserCreateDTO userCreateDTO) {
-        boolean emailExists = (userRepository.findByEmail(userCreateDTO.getEmail())).isPresent();
-        if(userCreateDTO.getEmail().isEmpty())
-            throw new RuntimeException("Email can't be empty!");
-        if(emailExists)
-            throw new RuntimeException("Email already in use!");
+        if(userCreateDTO.getEmail().isEmpty() )
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email can't be empty!");
+
+        boolean emailExists = userRepository.findByEmail(userCreateDTO.getEmail()).isPresent();
+        if (emailExists)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use!");
         User user = new User();
         user.setEmail(userCreateDTO.getEmail());
-        user.setPasswordHash(hashPassword(userCreateDTO.getPassword()));
+        user.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPassword()));
         user.setUserRole(userCreateDTO.getUserRole());
         user.setIsActive(userCreateDTO.getIsActive());
         User userSaved = userRepository.save(user);
         return toDTO(userSaved);
     }
-    public Optional<UserDTO> updateUser(UUID id, UserUpdateDTO userUpdateDTO) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if(!userOpt.isPresent())
-            return Optional.empty();
+    public UserDTO updateUser(UUID id, UserUpdateDTO userUpdateDTO) {
+        User user = userRepository.findById(id)
+                .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
         if(userUpdateDTO.getEmail().isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email can't be empty!");
+
         Optional<User> userExisting = userRepository.findByEmail(userUpdateDTO.getEmail());
-        if(userExisting.isPresent() && userExisting.get().getId() != userUpdateDTO.getId());
+        if(userExisting.isPresent() && !userExisting.get().getId().equals(id))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use!");
-        User user = userOpt.get();
+
         user.setEmail(userUpdateDTO.getEmail());
         user.setIsActive(userUpdateDTO.getIsActive());
         User userUpdated = userRepository.save(user);
-        return Optional.of(toDTO(userUpdated));
+        return toDTO(userUpdated);
     }
     public void deleteUser(UUID id) {
+        if (!userRepository.existsById(id))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         userRepository.deleteById(id);
-    }
-    private String hashPassword(String textPassword) {
-        return passwordEncoder.encode(textPassword);
     }
 }
