@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.util.UUID;
 
+@Entity
+@Table(name = "clients")
 public class Client {
     @Id
     @GeneratedValue

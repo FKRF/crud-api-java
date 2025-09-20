@@ -59,7 +59,7 @@ public class UserController {
     @PutMapping("/{id}/password")
     @PreAuthorize("@securityUtils.isSelf(authentication, #id)")
     public ResponseEntity<Void> changePassword(@PathVariable UUID id, @RequestBody ChangePasswordDTO dto, Authentication authentication) {
-        UUID callerId = UUID.fromString(authentication.getName()); // O usuário logado
+        UUID callerId = UUID.fromString(authentication.getName());
         userService.changePassword(id, dto.getOldPassword(), dto.getNewPassword(), callerId);
         return ResponseEntity.noContent().build();
     }

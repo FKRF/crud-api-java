@@ -7,11 +7,9 @@ import java.util.UUID;
 public class UserUpdateDTO {
     private UUID id;
     private String email;
-    private boolean isActive;
-    public UserUpdateDTO(UUID id, String email, boolean isActive) {
+    public UserUpdateDTO(UUID id, String email) {
         this.id = id;
         this.email = email;
-        this.isActive = isActive;
     }
     public UUID getId() {
         return id;
@@ -21,11 +19,5 @@ public class UserUpdateDTO {
     }
     public void setEmail(String email) {
         this.email = email;
-    }
-    public boolean getIsActive() {
-        return isActive;
-    }
-    public void setIsActive(boolean isActive) {
-        this.isActive = isActive;
     }
 }
