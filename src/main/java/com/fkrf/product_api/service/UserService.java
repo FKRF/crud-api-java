@@ -3,6 +3,7 @@ package com.fkrf.product_api.service;
 import com.fkrf.product_api.dto.UserCreateDTO;
 import com.fkrf.product_api.dto.UserDTO;
 import com.fkrf.product_api.dto.UserUpdateDTO;
+import com.fkrf.product_api.enums.UserRole;
 import com.fkrf.product_api.model.User;
 import com.fkrf.product_api.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -54,7 +55,7 @@ public class UserService {
         User user = new User();
         user.setEmail(userCreateDTO.getEmail());
         user.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPassword()));
-        user.setUserRole(userCreateDTO.getUserRole());
+        user.setUserRole(UserRole.USER);
         user.setIsActive(userCreateDTO.getIsActive());
         User userSaved = userRepository.save(user);
         return toDTO(userSaved);
@@ -71,7 +72,6 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use!");
 
         user.setEmail(userUpdateDTO.getEmail());
-        user.setIsActive(userUpdateDTO.getIsActive());
         User userUpdated = userRepository.save(user);
 
         return toDTO(userUpdated);
@@ -80,5 +80,21 @@ public class UserService {
         if (!userRepository.existsById(id))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         userRepository.deleteById(id);
+    }
+    public UserDTO changeRole(UUID id, UserRole newRole) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        user.setUserRole(newRole);
+        return toDTO(userRepository.save(user));
+    }
+    public void changePassword(UUID id, String oldPassword, String newPassword, UUID callerId) {
+        if (!id.equals(callerId))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only change your own password");
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Old password incorrect");
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }
