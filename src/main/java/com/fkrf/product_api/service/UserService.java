@@ -73,6 +73,7 @@ public class UserService {
         user.setEmail(userUpdateDTO.getEmail());
         user.setIsActive(userUpdateDTO.getIsActive());
         User userUpdated = userRepository.save(user);
+
         return toDTO(userUpdated);
     }
     public void deleteUser(UUID id) {

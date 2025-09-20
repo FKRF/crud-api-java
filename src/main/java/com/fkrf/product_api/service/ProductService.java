@@ -3,7 +3,9 @@ package com.fkrf.product_api.service;
 import com.fkrf.product_api.dto.ProductDTO;
 import com.fkrf.product_api.model.Product;
 import com.fkrf.product_api.repository.ProductRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,28 +39,39 @@ public class ProductService {
             productDTOS.add(toDTO(product));
         return productDTOS;
     }
-    public Optional<ProductDTO> getProductById(long id) {
-        Optional<Product> productOpt = productRepository.findById(id);
-        if(!productOpt.isPresent())
-            return Optional.empty();
-        return Optional.of(toDTO(productOpt.get()));
+    public ProductDTO getProductById(long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+        return toDTO(product);
     }
     public ProductDTO createProduct(ProductDTO productDTO) {
+        if (productDTO.getName().isEmpty() || productDTO.getName().isBlank())
+            throw  new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type a valid name");
+        boolean productNameExists = (productRepository.findByName(productDTO.getName())).isPresent();
+        if (productNameExists)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is already a product with this name");
         Product productCreated = productRepository.save(toEntity(productDTO));
         return toDTO(productCreated);
     }
-    public Optional<ProductDTO> updateProduct(long id, ProductDTO productDTO) {
-        Optional<Product> productOpt = productRepository.findById(id);
-        if (!productOpt.isPresent())
-            return Optional.empty();
-        Product product = productOpt.get();
+    public ProductDTO updateProduct(long id, ProductDTO productDTO) {
+        Product product = productRepository.findById(id)
+                .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found") );
+        if (productDTO.getName().isEmpty() || productDTO.getName().isBlank())
+            throw  new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type a valid name");
+        Optional<Product> productExisting = productRepository.findByName(productDTO.getName());
+        if (productExisting.isPresent() && productExisting.get().getId() != id)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is already a product with this name");
+
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
         product.setQuantity(productDTO.getQuantity());
         Product productUpdated = productRepository.save(product);
-        return Optional.of(toDTO(productUpdated));
+
+        return toDTO(productUpdated);
     }
     public void deleteProduct(long id) {
+        if (!productRepository.existsById(id))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
         productRepository.deleteById(id);
     }
 }

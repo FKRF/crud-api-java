@@ -3,6 +3,7 @@ package com.fkrf.product_api.controller;
 import com.fkrf.product_api.dto.ProductDTO;
 import com.fkrf.product_api.service.ProductService;
 import com.fkrf.product_api.model.Product;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,18 +24,18 @@ public class ProductController {
     }
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable     Long id) {
-        Optional<ProductDTO> productOpt = productService.getProductById(id);
-        return productOpt.isPresent() ? ResponseEntity.ok(productOpt.get()) : ResponseEntity.notFound().build();
+        ProductDTO productDTO = productService.getProductById(id);
+        return ResponseEntity.ok(productDTO);
     }
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
         ProductDTO productCreated = productService.createProduct(productDTO);
-        return ResponseEntity.ok(productCreated);
+        return ResponseEntity.status(HttpStatus.CREATED).body(productCreated);
     }
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody ProductDTO newProduct) {
-        Optional<ProductDTO> productOpt = productService.updateProduct(id, newProduct);
-        return productOpt.isPresent() ? ResponseEntity.ok(productOpt.get()) : ResponseEntity.notFound().build();
+    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
+        ProductDTO productUpdated = productService.updateProduct(id, productDTO);
+        return ResponseEntity.ok(productUpdated);
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {

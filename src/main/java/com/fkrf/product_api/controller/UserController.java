@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/users3")
 public class UserController {
     private final UserService userService;
 
